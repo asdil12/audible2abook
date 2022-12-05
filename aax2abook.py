@@ -38,8 +38,9 @@ ogg_file_list = []
 i = 1
 for chapter in chapters:
 	print(f"Transcoding chapter {i}/{len(chapters)}")
-	ogg_file = os.path.join(outdir, "%03i.ogg" % i)
-	ogg_file_list.append(ogg_file)
+	filename = "%03i.ogg" % i
+	ogg_file = os.path.join(outdir, filename)
+	ogg_file_list.append(filename)
 	if os.path.exists(ogg_file):
 		os.unlink(ogg_file)
 	subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "32k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file])
