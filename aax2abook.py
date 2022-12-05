@@ -43,7 +43,7 @@ for chapter in chapters:
 	ogg_file_list.append(filename)
 	if os.path.exists(ogg_file):
 		os.unlink(ogg_file)
-	subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "32k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file])
+	subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "48k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file])
 	i += 1
 
 print("Writing playlist")
