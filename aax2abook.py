@@ -60,19 +60,23 @@ except:
 			title, series = [s.strip() for s in title.split(':')]
 			series = series.replace('-serie', '')
 			title = f"{series}_{title}"
-		title = title.replace(' ', '_')
+		title = title.replace(' ', '_').replace("'", "")
 		title = title.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
 		print(f"Abook name hint: {author}.{title}.{m['lang']}")
 		os._exit(0)
 	except:
+		raise
 		print(f"Usage: {sys.argv[0]} AAX_FILE OUTPUT_DIR")
 		sys.exit(1)
 
-m4b_tmpfile = tempfile.NamedTemporaryFile(suffix=".m4b")
-m4b_file = m4b_tmpfile.name
+if aax_file.endswith('.m4b'):
+	m4b_file = aax_file
+else:
+	m4b_tmpfile = tempfile.NamedTemporaryFile(suffix=".m4b")
+	m4b_file = m4b_tmpfile.name
 
-print("Decrypting AAX to M4B")
-subprocess.check_output(["ffmpeg", "-hide_banner", "-y", "-activation_bytes", activation_bytes, "-i", aax_file, "-activation_bytes", activation_bytes, "-c", "copy", m4b_file])
+	print("Decrypting AAX to M4B")
+	subprocess.check_output(["ffmpeg", "-hide_banner", "-y", "-activation_bytes", activation_bytes, "-i", aax_file, "-activation_bytes", activation_bytes, "-c", "copy", m4b_file])
 
 if not os.path.exists(outdir):
 	os.mkdir(outdir)
@@ -131,7 +135,7 @@ if 'narrator' in m:
 if not 'Chapter' in m['description'] and len(m['description']) > 20:
 	j['metadata']["description"] = m['description']
 j['metadata']["publishedYear"] = m['date']
-j['metadata']["authors"] = [m['author']] # overwrite: sometimes names have special chars
+j['metadata']["authors"] = [a.strip() for a in m['author'].split(',')] # overwrite: sometimes names have special chars
 j['metadata']['title'] = try_capitalize(j['metadata']['title'], m['title'])
 if j['metadata']['series']:
 	j['metadata']['series'] = [try_capitalize(s, m['title']) for s in j['metadata']['series']]
