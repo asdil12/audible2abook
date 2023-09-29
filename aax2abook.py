@@ -57,9 +57,12 @@ except:
 		author = m['author'].lower().replace(' ', '_')
 		title = m['title'].lower()
 		if ':' in title:
-			title, series = [s.strip() for s in title.split(':')]
-			series = series.replace('-serie', '')
-			title = f"{series}_{title}"
+			if re.search(r"[0-9]", title):
+				title, series = [s.strip() for s in title.split(':')]
+				series = series.replace('-serie', '')
+				title = f"{series}_{title}"
+			else:
+				title = title.replace(':', '')
 		title = title.replace(' ', '_').replace("'", "")
 		title = title.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
 		print(f"Abook name hint: {author}.{title}.{m['lang']}")
@@ -139,5 +142,11 @@ j['metadata']["authors"] = [a.strip() for a in m['author'].split(',')] # overwri
 j['metadata']['title'] = try_capitalize(j['metadata']['title'], m['title'])
 if j['metadata']['series']:
 	j['metadata']['series'] = [try_capitalize(s, m['title']) for s in j['metadata']['series']]
+
+# subtitle: str
+# isbn: str
+# asin: str
+# explicit: bool
+# abridged: bool
 
 json.dump(j, open(os.path.join(outdir, "metadata.json"), "w"), indent=2)
