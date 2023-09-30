@@ -116,7 +116,7 @@ author, title, lang = os.path.basename(outdir.strip('/')).split('.')
 author = author.replace('_', ' ').title()
 title = title.replace('_', ' ')
 
-series = None
+series = []
 ms = re.match(r"([^0-9]+)([0-9]+) ([^0-9]+)", title)
 if ms:
 	series = [ms.group(1) + f"#{int(ms.group(2))}"]
