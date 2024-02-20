@@ -6,6 +6,9 @@ import json
 import os
 import re
 import sys
+import multiprocessing
+from queue import Queue
+from threading import Thread
 
 # try https://audible-converter.ml or audible-activator
 activation_bytes = "deadbeef"
@@ -94,6 +97,23 @@ chapters = json.loads(subprocess.check_output(["ffprobe", "-loglevel", "error", 
 
 ogg_file_list = []
 
+q = Queue(maxsize=1)
+
+def encode_chapters():
+	while True:
+		chapter, ogg_file = q.get()
+		if os.path.exists(ogg_file):
+			os.unlink(ogg_file)
+		subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "48k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file])
+		q.task_done()
+
+threads = []
+for i in range(multiprocessing.cpu_count()):
+	print(f"Starting encoder thread #{i}")
+	t = Thread(target=encode_chapters, daemon=True)
+	threads.append(t)
+	t.start()
+
 chapter_offset = int(os.environ.get('CHAPTER_OFFSET', '1').strip())
 i = chapter_offset
 for chapter in chapters:
@@ -101,10 +121,11 @@ for chapter in chapters:
 	filename = "%03i.ogg" % i
 	ogg_file = os.path.join(outdir, filename)
 	ogg_file_list.append(filename)
-	if os.path.exists(ogg_file):
-		os.unlink(ogg_file)
-	subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "48k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file])
+	q.put([chapter, ogg_file])
 	i += 1
+
+q.join()
+print("Transcoding finished")
 
 print("Writing playlist")
 playlist_file = os.path.join(outdir, "playlist.m3u")
