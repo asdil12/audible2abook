@@ -63,8 +63,8 @@ except:
 				title = f"{series}_{title}"
 			else:
 				title = title.replace(':', '')
-		title = title.replace(' ', '_').replace("'", "")
-		title = title.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+		title = title.replace(' ', '_').replace("'", "").replace('_-_', '_')
+		title = title.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')
 		print(f"Abook name hint: {author}.{title}.{m['lang']}")
 		os._exit(0)
 	except:
