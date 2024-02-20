@@ -94,9 +94,10 @@ chapters = json.loads(subprocess.check_output(["ffprobe", "-loglevel", "error", 
 
 ogg_file_list = []
 
-i = 1
+chapter_offset = int(os.environ.get('CHAPTER_OFFSET', '1').strip())
+i = chapter_offset
 for chapter in chapters:
-	print(f"Transcoding chapter {i}/{len(chapters)}")
+	print(f"Transcoding chapter {i}/{len(chapters)+chapter_offset-1}")
 	filename = "%03i.ogg" % i
 	ogg_file = os.path.join(outdir, filename)
 	ogg_file_list.append(filename)
