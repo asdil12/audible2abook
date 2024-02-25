@@ -82,7 +82,7 @@ else:
 	m4b_file = m4b_tmpfile.name
 
 	print("Decrypting AAX to M4B")
-	subprocess.check_output(["ffmpeg", "-hide_banner", "-y", "-activation_bytes", activation_bytes, "-i", aax_file, "-activation_bytes", activation_bytes, "-c", "copy", m4b_file])
+	subprocess.check_output(["ffmpeg", "-hide_banner", "-y", "-activation_bytes", activation_bytes, "-i", aax_file, "-activation_bytes", activation_bytes, "-c", "copy", m4b_file], stdin=subprocess.DEVNULL)
 
 if not os.path.exists(outdir):
 	os.mkdir(outdir)
@@ -91,9 +91,9 @@ print("Extracting logo")
 logo_file = os.path.join(outdir, "logo.png")
 if os.path.exists(logo_file):
 	os.unlink(logo_file)
-subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:v", "-frames:v", "1", logo_file])
+subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:v", "-frames:v", "1", logo_file], stdin=subprocess.DEVNULL)
 
-chapters = json.loads(subprocess.check_output(["ffprobe", "-loglevel", "error", m4b_file, "-show_chapters", "-print_format", "json"]))['chapters']
+chapters = json.loads(subprocess.check_output(["ffprobe", "-loglevel", "error", m4b_file, "-show_chapters", "-print_format", "json"], stdin=subprocess.DEVNULL))['chapters']
 
 ogg_file_list = []
 
@@ -104,7 +104,7 @@ def encode_chapters():
 		chapter, ogg_file = q.get()
 		if os.path.exists(ogg_file):
 			os.unlink(ogg_file)
-		subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "48k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file])
+		subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:a", "-c:a", "libopus", "-b:a", "48k", "-ss", chapter['start_time'], "-to", chapter['end_time'], ogg_file], stdin=subprocess.DEVNULL)
 		q.task_done()
 
 threads = []
