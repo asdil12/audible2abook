@@ -30,6 +30,8 @@ def get_metadata(aax_file):
 	for line in n.decode('utf-8').split("\n"):
 		if line.startswith('nrt '):
 			o['narrator'] = line.split(':')[1].strip()
+		elif line.startswith('Track_More') and aax_file.endswith('.aax'):
+			o['description'] = line.split(':', 1)[1].strip()
 	return o
 
 def try_capitalize(s, ref):
@@ -81,8 +83,9 @@ else:
 	m4b_tmpfile = tempfile.NamedTemporaryFile(suffix=".m4b")
 	m4b_file = m4b_tmpfile.name
 
-	print("Decrypting AAX to M4B")
-	subprocess.check_output(["ffmpeg", "-hide_banner", "-y", "-activation_bytes", activation_bytes, "-i", aax_file, "-activation_bytes", activation_bytes, "-c", "copy", m4b_file], stdin=subprocess.DEVNULL)
+	if not os.environ.get('META_ONLY', ''):
+		print("Decrypting AAX to M4B")
+		subprocess.check_output(["ffmpeg", "-hide_banner", "-y", "-activation_bytes", activation_bytes, "-i", aax_file, "-activation_bytes", activation_bytes, "-c", "copy", m4b_file], stdin=subprocess.DEVNULL)
 
 if not os.path.exists(outdir):
 	os.mkdir(outdir)
@@ -91,9 +94,9 @@ print("Extracting logo")
 logo_file = os.path.join(outdir, "logo.png")
 if os.path.exists(logo_file):
 	os.unlink(logo_file)
-subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", m4b_file, "-map", "0:v", "-frames:v", "1", logo_file], stdin=subprocess.DEVNULL)
+subprocess.check_call(["ffmpeg", "-loglevel", "error", "-i", aax_file, "-map", "0:v", "-frames:v", "1", logo_file], stdin=subprocess.DEVNULL)
 
-chapters = json.loads(subprocess.check_output(["ffprobe", "-loglevel", "error", m4b_file, "-show_chapters", "-print_format", "json"], stdin=subprocess.DEVNULL))['chapters']
+chapters = json.loads(subprocess.check_output(["ffprobe", "-loglevel", "error", aax_file, "-show_chapters", "-print_format", "json"], stdin=subprocess.DEVNULL))['chapters']
 
 ogg_file_list = []
 
@@ -117,11 +120,12 @@ for i in range(multiprocessing.cpu_count()):
 chapter_offset = int(os.environ.get('CHAPTER_OFFSET', '1').strip())
 i = chapter_offset
 for chapter in chapters:
-	print(f"Transcoding chapter {i}/{len(chapters)+chapter_offset-1}")
 	filename = "%03i.ogg" % i
 	ogg_file = os.path.join(outdir, filename)
 	ogg_file_list.append(filename)
-	q.put([chapter, ogg_file])
+	if not os.environ.get('META_ONLY', ''):
+		print(f"Transcoding chapter {i}/{len(chapters)+chapter_offset-1}")
+		q.put([chapter, ogg_file])
 	i += 1
 
 q.join()
