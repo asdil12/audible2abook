@@ -1,3 +1,6 @@
+> [!WARNING]
+> Moved to https://codeberg.org/asdil12/audible2abook
+
 # audible2abook
 
 Converts audible aax files to a folder containing opus encoded chapter files.
